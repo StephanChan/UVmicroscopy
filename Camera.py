@@ -14,7 +14,6 @@ except:
     print('no camera driver, using simulation')
     SIM = True
 
-
 ###########################################
 
 
@@ -45,15 +44,16 @@ class Camera(QThread):
         self.hcam_fr = None    # 相机外部特征句柄
 
         # 如果不是模拟模式，就初始化真实相机
-        if not SIM:
-            print('init camera')
-            self.initCamera()
+        
             # self.SetGain()
             #if self.hcam is not None:
                 #self.hcam_fr.get_float_feature("ExposureTime").set(100000.0)
                 #self.hcam_fr.get_float_feature("Gain").set(12.0)
 
     def run(self):
+        if not SIM:
+            print('init camera')
+            self.initCamera()
         self.QueueOut()
 
     # 异步任务处理主循环（用于执行 UI 下发的命令）
@@ -98,34 +98,47 @@ class Camera(QThread):
         print('camera closed')
         self.ui.statusbar.showMessage("Camera Thread successfully exited...")
         
+        
+    
     def FiniteAcquire(self):
         if self.hcam is not None:
             all_images = []
+            self.hcam_fr.get_enum_feature("TriggerMode").set("On")
+            self.CBackQueue.put(0)
             for i in range(self.ui.Zstack.value()):
-                buf = self.hcam.data_stream[0].get_image()
+                buf = self.hcam.data_stream[0].get_image(timeout=10000)
                 img = buf.get_numpy_array()
+                # [w,h] = img.shape
+                img = np.rot90(img,1)
+                
                 all_images.append(img)
             # self.image = np.clip(np.rint(np.mean(all_images, axis = 0)), 0, 65535).astype(np.uint16)
                 
             # self.img_16bit = Image.fromarray(self.image.astype(np.uint16), mode='I;16')
                 
         else:
-            all_images = np.uint16(np.random.rand(self.ui.Zstack.value(), self.ui.Width.value(), self.ui.Height.value())*2048)
+            all_images = np.uint16(np.random.rand(self.ui.Zstack.value(), self.ui.Width.value(), self.ui.Height.value())*4096)
+        # print(np.array(all_images).shape)
         self.CBackQueue.put(np.array(all_images))
             
+        # data shape is (Z, Y, X)
     def ContinuousAcquire(self):
+        if self.hcam is not None:
+            self.hcam_fr.get_enum_feature("TriggerMode").set("Off")
         while self.ui.LiveButton.isChecked():
             if self.hcam is not None:
                 all_images = []
-                buf = self.hcam.data_stream[0].get_image()
+                buf = self.hcam.data_stream[0].get_image(timeout=10000)
                 img = buf.get_numpy_array()
+                # [w,h] = img.shape
+                img = np.rot90(img,1)
                 all_images.append(img)
                 # self.image = np.clip(np.rint(np.mean(all_images, axis = 0)), 0, 65535).astype(np.uint16)
                     
                 # self.img_16bit = Image.fromarray(self.image.astype(np.uint16), mode='I;16')
             else:
-                all_images = np.uint16(np.random.rand(self.ui.Zstack.value(), self.ui.Width.value(), self.ui.Height.value())*2048)
-        
+                all_images = np.uint16(np.random.rand(self.ui.Zstack.value(), self.ui.Width.value(), self.ui.Height.value())*4096)
+            # print(np.array(all_images).shape)
             self.CBackQueue.put(np.array(all_images))
             
 
@@ -150,8 +163,18 @@ class Camera(QThread):
                     self.hcam_fr.get_int_feature("Width").set(self.ui.Width.value())
                     self.hcam_fr.get_int_feature("Height").set(self.ui.Height.value())
                     self.hcam_fr.get_int_feature("OffsetX").set(self.ui.Offsetx.value())
-                    self.hcam_fr.get_int_feature("Offsety").set(self.ui.Offsety.value())
+                    self.hcam_fr.get_int_feature("OffsetY").set(self.ui.Offsety.value())
+                    # self.hcam_fr.get_int_feature("Offsety").set(self.ui.Offsety.value())
+                    # self.hcam_fr.get_int_feature("Offsety").set(self.ui.Offsety.value())
                     # todo: trigger config
+                    self.hcam_fr.feature_save("export_config_file.txt")
+                    
+                    
+                    
+                    self.hcam_fr.get_enum_feature("TriggerSource").set("Line0")
+                    
+                    self.hcam_s = self.hcam.get_stream(1).get_feature_control()  # 返回流属性对象
+                    self.hcam_s.get_enum_feature("StreamBufferHandlingMode").set("NewestOnly")
                 except Exception as ex:
                     # 打开失败，打印错误
                     print(ex)
@@ -207,8 +230,6 @@ class Camera(QThread):
                 self.hcam_fr.get_enum_feature("GainAuto").set("Off")
                 self.ui.Gain.setValue(self.ui.CurrentGain.value())
 
-
-
     
     # 关闭相机并释放资源
     def Close(self):
@@ -217,3 +238,10 @@ class Camera(QThread):
             self.hcam = None
 
     
+    def downsample_stack_2x2_zyx(stack):
+        Z, Y, X = stack.shape
+        Yeven = Y // 2 * 2
+        Xeven = X // 2 * 2
+        stack = stack[:, :Yeven, :Xeven]  # (Z, Yeven, Xeven)
+        stack_ds = stack.reshape(Z, Yeven//2, 2, Xeven//2, 2).mean(axis=(2, 4))
+        return stack_ds.astype(np.uint16)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'D:\UVmicroscopy\software\UVmicroscopy-master\ui2.ui'
+# Form implementation generated from reading ui file 'D:\UVcode\UVmicroscopy\ui2.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.10
 #
@@ -113,16 +113,16 @@ class Ui_MainWindow(object):
         self.verticalLayout_18.setObjectName("verticalLayout_18")
         self.Imagemax = QtWidgets.QScrollBar(self.BCbox1)
         self.Imagemax.setMinimumSize(QtCore.QSize(0, 20))
-        self.Imagemax.setMaximum(2000)
+        self.Imagemax.setMaximum(65535)
         self.Imagemax.setSingleStep(1)
         self.Imagemax.setPageStep(5)
-        self.Imagemax.setProperty("value", 500)
+        self.Imagemax.setProperty("value", 20000)
         self.Imagemax.setOrientation(QtCore.Qt.Horizontal)
         self.Imagemax.setObjectName("Imagemax")
         self.verticalLayout_18.addWidget(self.Imagemax)
         self.Imagemin = QtWidgets.QScrollBar(self.BCbox1)
         self.Imagemin.setMinimumSize(QtCore.QSize(0, 20))
-        self.Imagemin.setMaximum(2000)
+        self.Imagemin.setMaximum(65535)
         self.Imagemin.setSingleStep(1)
         self.Imagemin.setPageStep(5)
         self.Imagemin.setProperty("value", 0)
@@ -136,7 +136,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.Mosaic = QtWidgets.QLabel(self.centralwidget)
         self.Mosaic.setMinimumSize(QtCore.QSize(500, 300))
-        self.Mosaic.setMaximumSize(QtCore.QSize(2000, 1000))
+        self.Mosaic.setMaximumSize(QtCore.QSize(1000, 1000))
         font = QtGui.QFont()
         font.setPointSize(25)
         self.Mosaic.setFont(font)
@@ -155,16 +155,16 @@ class Ui_MainWindow(object):
         self.verticalLayout_19.setObjectName("verticalLayout_19")
         self.Mosaicmax = QtWidgets.QScrollBar(self.BCbox2)
         self.Mosaicmax.setMinimumSize(QtCore.QSize(0, 20))
-        self.Mosaicmax.setMaximum(2000)
+        self.Mosaicmax.setMaximum(65535)
         self.Mosaicmax.setSingleStep(2)
         self.Mosaicmax.setPageStep(5)
-        self.Mosaicmax.setProperty("value", 500)
+        self.Mosaicmax.setProperty("value", 20000)
         self.Mosaicmax.setOrientation(QtCore.Qt.Horizontal)
         self.Mosaicmax.setObjectName("Mosaicmax")
         self.verticalLayout_19.addWidget(self.Mosaicmax)
         self.Mosaicmin = QtWidgets.QScrollBar(self.BCbox2)
         self.Mosaicmin.setMinimumSize(QtCore.QSize(0, 20))
-        self.Mosaicmin.setMaximum(2000)
+        self.Mosaicmin.setMaximum(65535)
         self.Mosaicmin.setSingleStep(1)
         self.Mosaicmin.setPageStep(5)
         self.Mosaicmin.setProperty("value", 0)
@@ -1271,8 +1271,8 @@ class Ui_MainWindow(object):
         self.AODOboard.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'SimSun\'; font-size:15pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">AODO</p></body></html>"))
+"</style></head><body style=\" font-family:\'Microsoft YaHei UI\'; font-size:15pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'SimSun\';\">AODO</span></p></body></html>"))
         self.label_54.setText(_translate("MainWindow", "devides"))
         self.label_48.setText(_translate("MainWindow", "direction: port2/line5"))
         self.label_49.setText(_translate("MainWindow", "Enable: port2/line0"))
@@ -1293,7 +1293,7 @@ class Ui_MainWindow(object):
         self.label_31.setText(_translate("MainWindow", "LED terminal"))
         self.label_52.setText(_translate("MainWindow", "devides"))
         self.label_38.setText(_translate("MainWindow", "Piezo Terminal"))
-        self.CameraTrig.setItemText(0, _translate("MainWindow", "port1/line0"))
+        self.CameraTrig.setItemText(0, _translate("MainWindow", "port1/line5"))
         self.CameraTrig.setItemText(1, _translate("MainWindow", "PFI1"))
         self.CameraTrig.setItemText(2, _translate("MainWindow", "PFI0"))
         self.CameraTrig.setItemText(3, _translate("MainWindow", "PFI2"))
@@ -1302,8 +1302,8 @@ class Ui_MainWindow(object):
         self.CameraTrig.setItemText(6, _translate("MainWindow", "PFI5"))
         self.CameraTrig.setItemText(7, _translate("MainWindow", "PFI6"))
         self.CameraTrig.setItemText(8, _translate("MainWindow", "PFI7"))
-        self.VibEnable.setItemText(0, _translate("MainWindow", "port1/line1"))
-        self.VibEnable.setItemText(1, _translate("MainWindow", "PFI2"))
+        self.VibEnable.setItemText(0, _translate("MainWindow", "port1/line2"))
+        self.VibEnable.setItemText(1, _translate("MainWindow", "port2/line5"))
         self.VibEnable.setItemText(2, _translate("MainWindow", "PFI0"))
         self.VibEnable.setItemText(3, _translate("MainWindow", "PFI1"))
         self.VibEnable.setItemText(4, _translate("MainWindow", "PFI3"))
@@ -1311,12 +1311,12 @@ class Ui_MainWindow(object):
         self.VibEnable.setItemText(6, _translate("MainWindow", "PFI5"))
         self.VibEnable.setItemText(7, _translate("MainWindow", "PFI6"))
         self.VibEnable.setItemText(8, _translate("MainWindow", "PFI7"))
-        self.LEDEnable.setItemText(0, _translate("MainWindow", "port1/line2:3"))
+        self.LEDEnable.setItemText(0, _translate("MainWindow", "port1/line6:7"))
         self.label_47.setText(_translate("MainWindow", "direction: port2/line3"))
         self.label_42.setText(_translate("MainWindow", "Z stage: port0/line2"))
         self.label_46.setText(_translate("MainWindow", "direction: port2/line1"))
         self.label_32.setText(_translate("MainWindow", "Pump terminal"))
-        self.PumpEnable.setItemText(0, _translate("MainWindow", "port1/line4:5"))
+        self.PumpEnable.setItemText(0, _translate("MainWindow", "port1/line4"))
         self.Tabs.setTabText(self.Tabs.indexOf(self.Lasertab), _translate("MainWindow", "Terminals"))
         self.TestButten3.setText(_translate("MainWindow", "DnS Display Surface"))
         self.TestButten2.setText(_translate("MainWindow", "DnS Process SurfScan"))

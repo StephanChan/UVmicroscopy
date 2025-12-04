@@ -21,14 +21,14 @@ class DnSThread(QThread):
     def __init__(self):
         super().__init__()
         self.SampleMosaic= []
-        self.sliceNum = 0
+        self.sliceNum = 1
         self.tileNum = 1
         self.SnapNum = 1
         self.totalTiles = 0
         self.display_actions = 0
         
     def run(self):
-        self.sliceNum = self.ui.SliceN.value()-1
+        self.sliceNum = self.ui.SliceN.value()
         self.Imagemax = self.ui.Imagemax.value()
         self.Imagemin = self.ui.Imagemin.value()
         self.Mosaicmax = self.ui.Mosaicmax.value()
@@ -44,8 +44,8 @@ class DnSThread(QThread):
                 if self.item.action in ['Snap']:
                     self.display_actions += 1
                     self.Display_Snap(self.item.data)
-                elif self.item.action == 'display_mosaic':
-                    self.Display_mosaic(self.item.data)
+                elif self.item.action == 'Display_Mosaic':
+                    self.Display_Mosaic(self.item.data, self.item.args)
                 elif self.item.action == 'Clear':
                     self.SampleMosaic= []
                 elif self.item.action == 'UpdateContrastImage':
@@ -57,21 +57,21 @@ class DnSThread(QThread):
                 elif self.item.action == 'restart_tilenum':
                     self.restart_tilenum()
                 elif self.item.action == 'change_slice_number':
-                    self.sliceNum = self.ui.SliceN.value()-1
+                    self.sliceNum = self.ui.SliceN.value()
                     self.ui.CuSlice.setValue(self.sliceNum)
                 elif self.item.action == 'WriteAgar':
                     self.WriteAgar(self.item.data, self.item.args)
                 elif self.item.action == 'Init_Mosaic':
-                    self.Init_Mosaic(self.item.data, self.item.args)
-                elif self.item.action == 'Save_mosaic':
-                    self.Save_mosaic()
+                    self.Init_Mosaic(self.item.args)
+                elif self.item.action == 'Save_Mosaic':
+                    self.Save_Mosaic()
                     
                 else:
                     message = 'Display and save thread is doing something invalid' + self.item.action
                     self.ui.statusbar.showMessage(message)
                     # self.ui.PrintOut.append(message)
                     self.log.write(message)
-                if time.time()-start>0.1:
+                if time.time()-start>1:
                     print('time for DnS:',round(time.time()-start,3))
             except Exception as error:
                 message = "\nAn error occurred:"+" skip the display and save action\n"
@@ -99,12 +99,14 @@ class DnSThread(QThread):
         scale = self.ui.scale.value()
         Xpixels = self.ui.Width.value()
         Ypixels = self.ui.Height.value()
-        Zpixels = self.ui.Zstack.value()
+        Zpixels = data.shape[0]
+        data = np.uint16(data.reshape(Zpixels, Ypixels//2, 2, Xpixels//2, 2).mean(axis=(2, 4))*16)
+        Xpixels = Xpixels//2
+        Ypixels = Ypixels//2
         if data.shape[0] > 1:
             self.image=np.mean(data,0)
         else:
             self.image = data[0]
-        
         pixmap = RGBImagePlot(matrix1 = np.float32(self.image[::scale, ::scale]), m=self.ui.Imagemin.value(), M=self.ui.Imagemax.value())
         # clear content on the waveformLabel
         self.ui.Image.clear()
@@ -112,6 +114,7 @@ class DnSThread(QThread):
         self.ui.Image.setPixmap(pixmap)
         
         if self.ui.Save.isChecked():
+            
             tif = TIFF.open(self.ui.DIR.toPlainText()+'/'+self.SnapFilename([Ypixels,Xpixels,Zpixels]), mode='w')
             for ii in range(Zpixels):
                 # self.WriteData(data, self.AlineFilename([Yrpt,Xpixels,Zpixels]))
@@ -123,40 +126,56 @@ class DnSThread(QThread):
         Xtiles = args[1][0]  # 马赛克列数
         Ytiles = args[1][1]  # 马赛克行数
         #self.scale = min(math.gcd(self.h,self.w),32) #求小于32的最大公约数作为scale
-        scale = self.ui.scale.value
-    
-        self.SampleMosaic = np.zeros([Ytiles*(self.h//scale), Xtiles*(self.w//scale)], dtype=np.uint16)
+        scale = self.ui.scale.value()
+        Xpixels = self.ui.Width.value()//2
+        Ypixels = self.ui.Height.value()//2
+        self.SampleMosaic = np.zeros([Ytiles*(Ypixels//scale), Xtiles*(Xpixels//scale)], dtype=np.uint16)
+
         pixmap = RGBImagePlot(matrix1=self.SampleMosaic, m=self.ui.Mosaicmin.value(), M=self.ui.Mosaicmax.value())
         self.ui.Mosaic.clear()
         self.ui.Mosaic.setPixmap(pixmap)
-        self.sliceNum += 1
+
     
     
     def Display_Mosaic(self, data, args = []):
         scale = self.ui.scale.value()
         Xpixels = self.ui.Width.value()
         Ypixels = self.ui.Height.value()
-        Zpixels = self.ui.Zstack.value()
+        Zpixels = data.shape[0]
+        # print(np.array(data).shape)
+        data = np.uint16(data.reshape(Zpixels, Ypixels//2, 2, Xpixels//2, 2).mean(axis=(2, 4))*16)
+        # print(np.array(data).shape)
+        Xpixels = Xpixels//2
+        Ypixels = Ypixels//2
         if data.shape[0]> 1:
             self.image=np.mean(data,0)
         else:
             self.image = data[0]
+            
+        pixmap = RGBImagePlot(matrix1 = np.float32(self.image[::scale, ::scale]), m=self.ui.Imagemin.value(), M=self.ui.Imagemax.value())
+        # clear content on the waveformLabel
+        self.ui.Image.clear()
+        # update iamge on the waveformLabel
+        self.ui.Image.setPixmap(pixmap)
+        tileMean = np.mean(self.image)
+        self.ui.tileMean.setValue(tileMean)
         Xtiles = args[1][0]
         Ytiles = args[1][1]
         Y = Ytiles - args[0][1] - 1
         X = args[0][0] if args[0][1] % 2 == 1 else Xtiles - args[0][0] - 1
-    
-        self.SampleMosaic[self.h//scale*Y:self.h//scale*(Y+1),
-                  self.w//scale*X:self.w//scale*(X+1)] = self.image[::scale, ::scale]
+
+        self.SampleMosaic[Ypixels//scale*Y:Ypixels//scale*(Y+1),\
+                  Xpixels//scale*X:Xpixels//scale*(X+1)] = self.image[::scale, ::scale]
     
         pixmap = RGBImagePlot(matrix1=self.SampleMosaic, m=self.ui.Mosaicmin.value(), M=self.ui.Mosaicmax.value())
         self.ui.Mosaic.clear()
         self.ui.Mosaic.setPixmap(pixmap)
         if self.ui.Save.isChecked():
-            tif = TIFF.open(self.ui.DIR.toPlainText()+'/mosaic/'+self.MosaicFilename([Ypixels,Xpixels,Zpixels]), mode='w')
+            filenametiff, filenamebin = self.MosaicFilename([Ypixels,Xpixels,Zpixels])
+            # self.WriteData(data, [self.ui.DIR.toPlainText(),'/mosaic/',filenamebin])
+            tif = TIFF.open(self.ui.DIR.toPlainText()+'/mosaic/'+filenametiff, mode='w')
             for ii in range(Zpixels):
-                # self.WriteData(data, self.AlineFilename([Yrpt,Xpixels,Zpixels]))
-                tif.write_image(data[ii])
+                tif.write_image(data[ii,:,:])
             tif.close()
     
     # 保存马赛克拼图图像
@@ -199,38 +218,76 @@ class DnSThread(QThread):
     def restart_tilenum(self):
         self.tileNum = 1
         self.sliceNum = self.sliceNum+1
+        print('/n slicenum: ', self.sliceNum,'/n')
         self.ui.CuSlice.setValue(self.sliceNum)
-        if not os.path.exists(self.ui.DIR.toPlainText()+'/mosaic/slice'+str(self.sliceNum)):
-            os.mkdir(self.ui.DIR.toPlainText()+'/mosaic/slice'+str(self.sliceNum))
+        # if not os.path.exists(self.ui.DIR.toPlainText()+'/mosaic/slice'+str(self.sliceNum)):
+        #     os.mkdir(self.ui.DIR.toPlainText()+'/mosaic/slice'+str(self.sliceNum))
         # if not os.path.exists(self.ui.DIR.toPlainText()+'/surf/vol'+str(self.sliceNum)):
         #     os.mkdir(self.ui.DIR.toPlainText()+'/surf/vol'+str(self.sliceNum))
         # if not os.path.exists(self.ui.DIR.toPlainText()+'/fitting/vol'+str(self.sliceNum)):
         #     os.mkdir(self.ui.DIR.toPlainText()+'/fitting/vol'+str(self.sliceNum))
         
     def MosaicFilename(self, shape = [0,0,0]):
-        filename = 'slice-'+str(self.sliceNum)+'-tile-'+str(self.tileNum)+'-Y'+str(shape[0])+'-X'+str(shape[1])+'-Z'+str(shape[2])+'.tif'
+        filename = 'slice-'+str(self.sliceNum)+'-tile-'+str(self.tileNum)+'-'+str(shape[0])+'-'+str(shape[1])+'-'+str(shape[2])+'.tif'
+        filenamebin = 'slice-'+str(self.sliceNum)+'-tile-'+str(self.tileNum)+'-'+str(shape[0])+'-'+str(shape[1])+'-'+str(shape[2])+'.bin'
+        
         self.tileNum = self.tileNum + 1
     
         print(filename)
         # self.ui.PrintOut.append(filename)
         self.log.write(filename)
-        return filename
-    
+        return filename, filenamebin
+
     
     def SnapFilename(self, shape):
-        filename = 'Snap-'+str(self.SnapNum)+'-Y'+str(shape[0])+'-X'+str(shape[1])+'-Z'+str(shape[2])+'.tif'
+        filename = 'Snap-'+str(self.SnapNum)+'-'+str(shape[0])+'-'+str(shape[1])+'-'+str(shape[2])+'.tif'
         self.SnapNum = self.SnapNum + 1
         return filename
     
         
+    # def WriteAgar(self, data, args):
+    #     [Ystep, Xstep] = args
+    #     filename = 'slice-'+str(self.sliceNum)+'-agarTiles X-'+str(Xstep)+'-by Y-'+str(Ystep)+'-.bin'
+    #     filePath = self.ui.DIR.toPlainText()
+    #     filePath = filePath + "/" + filename
+    #     dataArg = np.asarray(data)
+    #     # print(dataArg.shape)
+    #     if dataArg.ndim == 3:
+    #         data2d = dataArg[:, :,0] 
+    #     elif data.ndim == 2:
+    #         data2d = dataArg
+    #     else:
+    #         raise ValueError(f"WriteAgar: unexpected data.ndim={data.ndim}, expect 2 or 3")
+    #     # print(data2d.shape, Ystep, Xstep, data2d.shape != (Ystep, Xstep))
+    #     if data2d.shape != (Ystep, Xstep):
+    #         print("Warning: tile_flag shape", data2d.shape, "!= expected", (Ystep, Xstep))
+        
+    #     print(data2d)
+    #     fp = open(filePath, 'wb')
+    #     np.uint8(data2d).tofile(fp)
+    #     fp.close()
     def WriteAgar(self, data, args):
         [Ystep, Xstep] = args
         filename = 'slice-'+str(self.sliceNum)+'-agarTiles X-'+str(Xstep)+'-by Y-'+str(Ystep)+'-.bin'
         filePath = self.ui.DIR.toPlainText()
         filePath = filePath + "/" + filename
         # print(filePath)
+        # print(data.shape, data)
+        fp = open(filePath, 'wb')
+        np.uint8(data).tofile(fp)
+        fp.close()
+        
+    def WriteData(self, data, filename):
+        filePath = self.ui.DIR.toPlainText()
+        filePath = filePath + '/' + filename
+        # print(filePath)
+        import time
+        start = time.time()
         fp = open(filePath, 'wb')
         data.tofile(fp)
         fp.close()
-        
-    
+        if time.time()-start > 1:
+            message = 'time for saving: '+str(round(time.time()-start,3))
+            print(message)
+            # self.ui.PrintOut.append(message)
+            self.log.write(message)

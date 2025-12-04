@@ -161,14 +161,17 @@ class DOThread(QThread):
         # stage direction and enables
         self.StageDnE = self.ui.AODOboard.toPlainText()+'/port2/line0:7'
         # Camera trigger termial
-        self.CameraTrig = '/'+self.ui.AODOboard.toPlainText()+'/'+self.ui.CameraTrig.currentText()
+        self.CameraTrig = self.ui.AODOboard.toPlainText()+'/'+self.ui.CameraTrig.currentText()
+        # print(self.CameraTrig)
         # vibratome enable terminal
         self.VibEnable = self.ui.AODOboard.toPlainText()+'/'+self.ui.VibEnable.currentText()
+        # print(self.VibEnable)
         # LED enable terminal
         self.LEDEnable = self.ui.AODOboard.toPlainText()+'/'+self.ui.LEDEnable.currentText()
+        # print(self.LEDEnable)
         # LED enable terminal
         self.PumpEnable = self.ui.AODOboard.toPlainText()+'/'+self.ui.PumpEnable.currentText()
-        # print(self.VibEnable)
+        # print(self.PumpEnable)
         self.ui.Xcurrent.setValue(self.ui.XPosition.value())
         self.ui.Ycurrent.setValue(self.ui.YPosition.value())
         self.ui.Zcurrent.setValue(self.ui.ZPosition.value())
@@ -204,7 +207,7 @@ class DOThread(QThread):
     def Uninit(self):
         if not (SIM or self.SIM):
             settingtask = daq.Task('setting')
-            settingtask.do_channels.add_do_chan(lines='Robot/port2/line0:3')
+            settingtask.do_channels.add_do_chan(lines='Robot/port2/line0:3',)
             tmp = np.uint32(YDISABLE + XDISABLE + ZDISABLE)
             settingtask.write(tmp, auto_start = True)
             settingtask.stop()
@@ -453,16 +456,19 @@ class DOThread(QThread):
                 
     def Zstack(self):
         Steps = self.ui.Zstack.value()
-        pos = self.ui.ZMstagestepsize.value()*(range(Steps)-Steps/2)+50 # um
+        pos = self.ui.ZMstagestepsize.value()*(np.array(range(Steps))/1.0+0.5-Steps/2)+40 # um
+        # print(pos)
         for istep in range(Steps):
             self.ui.ZMPosition.setValue(pos[istep])
             self.AOtask.write(pos[istep] * 0.1, auto_start = True)
             self.AOtask.wait_until_done(timeout = 0.005)
+            self.ui.ZMcurrent.setValue(pos[istep])
             self.DOtask.write(1, auto_start = True)
             self.DOtask.wait_until_done(timeout = 0.005)
+            # time.sleep(0.5)
             self.DOtask.write(0, auto_start = True)
             # wait until last exposure finish
-            time.sleep((self.ui.CurrentExpo.value()+50)/1000.0)
+            time.sleep((self.ui.CurrentExpo.value()+10)/1000.0)
             
             
     def ConfigZstack(self):
@@ -472,7 +478,8 @@ class DOThread(QThread):
                                               min_val=- 10.0, max_val=10.0, \
                                               units=daq.constants.VoltageUnits.VOLTS)
 
-        self.DOtask.do_channels.add_do_chan(lines=self.CameraTrig)
+        self.DOtask.do_channels.add_do_chan(lines=self.CameraTrig,line_grouping=LineGrouping.CHAN_PER_LINE)
+        # print(self.CameraTrig)
 
     def StopCloseZstack(self):
         # self.AOtask.wait_until_done(timeout = 5)

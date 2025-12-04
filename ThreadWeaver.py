@@ -45,6 +45,9 @@ class WeaverThread(QThread):
                     message = self.Live()
                     self.ui.statusbar.showMessage(message)
                 elif self.item.action in ['Mosaic']:
+                    # make directories
+                    if not os.path.exists(self.ui.DIR.toPlainText()+'/mosaic'):
+                        os.mkdir(self.ui.DIR.toPlainText()+'/mosaic')
                     if self.ui.PreMosaic.isChecked():
                         self.PreMosaic()
                     else:
@@ -71,6 +74,10 @@ class WeaverThread(QThread):
                     self.ui.SliceZDepth.setEnabled(False)
                     # self.ui.ImageZDepth.setEnabled(False)
                     self.ui.SMPthickness.setEnabled(False)
+                    if self.ui.PreMosaic.isChecked():
+                        self.PreMosaic()
+                    else:
+                        self.LoadTileFlag()
                     message = self.OneImagePerCut()
                     self.ui.statusbar.showMessage(message)
                     # self.ui.PrintOut.append(message)
@@ -118,8 +125,6 @@ class WeaverThread(QThread):
             
             
     def Snap(self):
-        Zstack = self.ui.Zstack.value()
-        self.ui.Zstack.setValue(1)
         # flush image queue
         while self.CQueue.qsize()>1:
             self.CQueue.get()
@@ -128,17 +133,22 @@ class WeaverThread(QThread):
         an_action = DOAction('LightON')
         self.DOQueue.put(an_action)
         self.DOBackQueue.get()
+        an_action = DOAction('ConfigZstack')
+        self.DOQueue.put(an_action)
         an_action = CAction('FiniteAcquire')
         self.CQueue.put(an_action)
+        self.CBackQueue.get()
+        an_action = DOAction('Zstack')
+        self.DOQueue.put(an_action)
         images = self.CBackQueue.get()
         an_action = DOAction('LightOFF')
         self.DOQueue.put(an_action)
         an_action = CAction('Stream_off')
         self.CQueue.put(an_action)
-        
+        an_action = DOAction('StopCloseZstack')
+        self.DOQueue.put(an_action)
         an_action = DnSAction('Snap', images) # data in Memory[memoryLoc]
         self.DnSQueue.put(an_action)
-        self.ui.Zstack.setValue(Zstack)
         message = 'Snap succesfully finished'
         return message
         
@@ -156,6 +166,7 @@ class WeaverThread(QThread):
         self.DOBackQueue.get()
         an_action = CAction('ContinuousAcquire')
         self.CQueue.put(an_action)
+        
         while self.ui.LiveButton.isChecked():
             images = self.CBackQueue.get()
             an_action = DnSAction('Snap', images) # data in Memory[memoryLoc]
@@ -180,11 +191,11 @@ class WeaverThread(QThread):
         self.total_Y = self.Mosaic_pattern.shape[1]
         self.total_X = self.Mosaic_pattern.shape[2]
 
-        self.Mosaic_pattern_flattern = self.Mosaic_pattern.reshape(2,total_X*total_Y)
+        self.Mosaic_pattern_flattern = self.Mosaic_pattern.reshape(2,self.total_X*self.total_Y)
         # init sample surface plot window
         args = [[0,0],[self.total_X, self.total_Y]]
-        an_action = CAction('Init_Mosaic', args = args) # data in Memory[memoryLoc]
-        self.CQueue.put(an_action)
+        an_action = DnSAction('Init_Mosaic', args = args) # data in Memory[memoryLoc]
+        self.DnSQueue.put(an_action)
         self.tile_flag = np.ones([self.total_Y, self.total_X])
         
     def LoadTileFlag(self):
@@ -196,28 +207,70 @@ class WeaverThread(QThread):
             # print(numbs)
             xx = np.uint8(numbs[1])
             yy = np.uint8(numbs[2])
-            self.tile_flag = np.fromfile(self.ui.Tile_DIR.text(), dtype=np.uint8).reshape([xx,yy])
-            return None
+            
+            # arr = np.fromfile(self.ui.Tile_DIR.text(), dtype=np.uint8)
+            # total = xx * yy
+            
+            # if arr.size < total:
+            #     print("tile flag file too small, ignore this file.")
+            #     return 'Error'
+
+            # if arr.size == total:
+            #     self.tile_flag = arr.reshape((xx, yy))
+            # else:
+            #     arr2d = arr[:total].reshape((xx, yy))
+            #     self.tile_flag = arr2d
+            self.tile_flag = np.fromfile(filepath, dtype=np.uint8)
+            # print(self.tile_flag.shape, self.tile_flag)
+            self.tile_flag = self.tile_flag.reshape([yy,xx])
+            # print(self.tile_flag.shape)
+
         else:
             print('tile flag file not found')
             return 'Error'
-        # print(self.tile_flag.shape)
+        self.Mosaic_pattern, status = GenMosaic_XYGalvo(self.ui.XStart.value(),\
+                                        self.ui.XStop.value(),\
+                                        self.ui.YStart.value(),\
+                                        self.ui.YStop.value(),\
+                                        self.ui.XFOV.value(),\
+                                        self.ui.YFOV.value(),\
+                                        self.ui.Overlap.value())
+        # get total number of strips, i.e.，xstage positions
+        self.total_Y = self.Mosaic_pattern.shape[1]
+        self.total_X = self.Mosaic_pattern.shape[2]
+
+        self.Mosaic_pattern_flattern = self.Mosaic_pattern.reshape(2,self.total_X*self.total_Y)
+        # init sample surface plot window
+        args = [[0,0],[self.total_X, self.total_Y]]
+        an_action = DnSAction('Init_Mosaic', args = args) # data in Memory[memoryLoc]
+        self.DnSQueue.put(an_action)
+            
+        #     self.tile_flag = np.fromfile(self.ui.Tile_DIR.text(), dtype=np.uint8).reshape([xx,yy])
+        #     print(self.tile_flag)
+        #     return None
+        # else:
+        #     print('tile flag file not found')
+        #     return 'Error'
+        # # print(self.tile_flag.shape)
         
 
-    def Mosaic(self,version = 1):
+    def Mosaic(self):
         # slice number increase, tile number restart from 1
-        an_action = DnSAction('InitSaveCount') # data in Memory[memoryLoc]
+        args = [[0,0],[self.total_X, self.total_Y]]
+        an_action = DnSAction('Init_Mosaic', args = args) # data in Memory[memoryLoc]
         self.DnSQueue.put(an_action)
         an_action = DnSAction('WriteAgar', data = self.tile_flag, args = [self.total_Y, self.total_X]) # data in Memory[memoryLoc]
         self.DnSQueue.put(an_action)
         ############################################################# Iterate through strips for one Mosaic
         an_action = DOAction('ConfigZstack')
         self.DOQueue.put(an_action)
+        an_action = CAction('Stream_on')
+        self.CQueue.put(an_action)
+        print('totalY:',self.total_Y, 'totalX:', self.total_X, self.tile_flag.shape)
         for yy in range(self.total_Y):
             for xx in range(self.total_X):
                 if self.ui.RunButton.isChecked() and self.tile_flag[yy][xx] > 0:
-                    an_action = CAction('Stream_on')
-                    self.CQueue.put(an_action)
+                    
                     # stage move to start XYZ position
                     self.ui.XPosition.setValue(self.Mosaic_pattern[0,yy,xx])
                     an_action = DOAction('Xmove2')
@@ -234,14 +287,14 @@ class WeaverThread(QThread):
                     self.DOBackQueue.get()
                     an_action = CAction('FiniteAcquire')
                     self.CQueue.put(an_action)
+                    self.CBackQueue.get()
                     an_action = DOAction('Zstack')
                     self.DOQueue.put(an_action)
                     images = self.CBackQueue.get()
                     
                     an_action = DOAction('LightOFF')
                     self.DOQueue.put(an_action)
-                    an_action = CAction('Stream_off')
-                    self.CQueue.put(an_action)
+                    
                     
                     # update mosaic pattern
                     self.Mosaic_pattern_flattern = self.Mosaic_pattern_flattern[:,1:]
@@ -250,49 +303,64 @@ class WeaverThread(QThread):
                     self.ui.MosaicLabel.clear()
                     # update iamge on the waveformLabel
                     self.ui.MosaicLabel.setPixmap(pixmap)
-
+                    # print([[xx,yy],[self.total_X, self.total_Y]])
                     an_action = DnSAction('Display_Mosaic', data = images, args = [[xx,yy],[self.total_X, self.total_Y]]) 
                     self.DnSQueue.put(an_action)  
                     ############################ check user input
                     if self.ui.PauseButton.isChecked():
-                        while self.ui.PauseButton.isChecked() and self.ui.Mosaic.isChecked():
+                        while self.ui.PauseButton.isChecked() and self.ui.RunButton.isChecked():
                             time.sleep(0.5)
                             
+        an_action = CAction('Stream_off')
+        self.CQueue.put(an_action)               
         an_action = DnSAction('Save_Mosaic') 
         self.DnSQueue.put(an_action)
         an_action = DOAction('StopCloseZstack')
         self.DOQueue.put(an_action)
+        an_action = DnSAction('restart_tilenum') # data in Memory[memoryLoc]
+        self.DnSQueue.put(an_action)
         self.Re_evaluate_mosaic()
         # Requester.send_wechat(f"Mosaic finished, total {total_X*total_Y} tiles, saved {self.saved} tiles.",title='UVSliceScanner Finished')
         return 'Mosaic successfully finished...'
 
     def Re_evaluate_mosaic(self):
         # evaluate the previous mosaic figure, remove empty tiles, and extend tissue boundary
-        self.surf = np.flip(np.rot90(self.DnSBackQueue.get()),0)
+        # self.surf = np.flip(np.rot90(self.DnSBackQueue.get()),0)
+        self.surf = self.DnSBackQueue.get()
         plt.figure()
-        plt.subplot(1,2,1)
-        plt.imshow(self.surf,vmin=0,vmax=255)
+        plt.subplot(2,1,1)
+        plt.imshow(self.surf,vmin=0,vmax=10550)
         # segment tissue area using threshold
         mask = np.float32(self.surf>self.ui.AgarValue.value())
-        plt.subplot(1,2,2)
+        plt.subplot(2,1,2)
         plt.imshow(mask)
         plt.show()
         
         # for snake-scanning of mosaic area, flip odd rows of tile_flag to make it zig-zag scan
         [xx,yy] = np.shape(self.tile_flag)
+        # print('xx:', xx, 'yy:',yy)
         self.tile_flag_rearange = self.tile_flag.copy()
-        self.tile_flag_rearange = np.flip(self.tile_flag_rearange)
+        # plt.figure()
+        # plt.subplot(1,3,1)
+        # plt.imshow(self.tile_flag)
+        
         for ii in range(xx):
             tmp = self.tile_flag_rearange[ii,:]
             if np.mod(ii,2) == 0:
                 self.tile_flag_rearange[ii,:] = tmp
             else:
                 self.tile_flag_rearange[ii,:] = tmp[::-1]
-        
+        # plt.subplot(1,3,2)
+        # plt.imshow(self.tile_flag_rearange)
+        # self.tile_flag_rearange = np.flip(self.tile_flag_rearange)
+
+        # plt.subplot(1,3,3)
+        # plt.imshow(self.tile_flag_rearange)
+        # plt.show()
         # get tile downsampled size
         scale = self.ui.scale.value()
-        xxlength = self.ui.Width.value()//scale
-        yylength = self.ui.Height.value()//scale
+        xxlength = self.ui.Width.value()//scale//2
+        yylength = self.ui.Height.value()//scale//2
         # total tissue tiles in the last mosaic
         Agartiles_pre = np.sum(np.float32(self.tile_flag))
         # remove empty tiles
@@ -307,26 +375,32 @@ class WeaverThread(QThread):
             for jj in range(1,yy-1):
                 maskij = mask[ii*xxlength:(ii+1)*xxlength, jj*yylength:(jj+1)*yylength]
                 
-                if np.sum(maskij[0:xxlength//4,:])>10:
+                if np.sum(maskij[0:xxlength//4,:])>300:
                     self.tile_flag_rearange[ii-1,jj]=1
-                if np.sum(maskij[-xxlength//4:,:])>10:
+                if np.sum(maskij[-xxlength//4:,:])>300:
                     self.tile_flag_rearange[ii+1,jj]=1
-                if np.sum(maskij[:,0:yylength//4])>10:
+                if np.sum(maskij[:,0:yylength//4])>300:
                     self.tile_flag_rearange[ii,jj-1]=1
-                if np.sum(maskij[:,-yylength//4:])>10:
+                if np.sum(maskij[:,-yylength//4:])>300:
                     self.tile_flag_rearange[ii,jj+1]=1
-        plt.figure()
-        plt.imshow(self.tile_flag_rearange)
-        plt.show()
+        # plt.figure()
+        # plt.subplot(1,3,1)
+        # plt.imshow(self.tile_flag_rearange)
         
+        self.tile_flag_rearange = np.flip(self.tile_flag_rearange)
+        # plt.subplot(1,3,2)
+        # plt.imshow(self.tile_flag_rearange)
         for ii in range(xx):
             tmp = self.tile_flag_rearange[ii,:]
             if np.mod(ii,2) == 0:
                 self.tile_flag_rearange[ii,:] = tmp
             else:
                 self.tile_flag_rearange[ii,:] = tmp[::-1]
-        self.tile_flag = np.flip(self.tile_flag_rearange)
         
+        self.tile_flag = self.tile_flag_rearange
+        # plt.subplot(1,3,3)
+        # plt.imshow(self.tile_flag)
+        # plt.show()
         # pause if large decrease of tiles
         # print(Agartiles_pre, np.sum(self.tile_flag), np.float32(Agartiles_pre) - np.float32(np.sum(self.tile_flag)))
         if np.float32(Agartiles_pre) - np.sum(np.float32(self.tile_flag))>30:
@@ -337,7 +411,9 @@ class WeaverThread(QThread):
     
     def OneImagePerCut(self):
         completion_flag = True
-        total_slices = np.uint16(self.ui.SMPthickness.value()*1000//self.ui.ImageZDepth.value())
+        total_slices = np.uint16(self.ui.SMPthickness.value()*1000//self.ui.SliceZDepth.value())
+        print('\n total_slices: ', total_slices,'\n')
+        self.log.write('total_slices: '+ str(total_slices))
         for ii in range(total_slices):
             # cut one slice
             message = self.SingleCut(self.ui.SliceZStart.value()+ii*self.ui.SliceZDepth.value()/1000.0)

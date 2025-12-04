@@ -268,7 +268,7 @@
                 </size>
                </property>
                <property name="maximum">
-                <number>2000</number>
+                <number>65535</number>
                </property>
                <property name="singleStep">
                 <number>1</number>
@@ -277,7 +277,7 @@
                 <number>5</number>
                </property>
                <property name="value">
-                <number>500</number>
+                <number>20000</number>
                </property>
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
@@ -293,7 +293,7 @@
                 </size>
                </property>
                <property name="maximum">
-                <number>2000</number>
+                <number>65535</number>
                </property>
                <property name="singleStep">
                 <number>1</number>
@@ -329,7 +329,7 @@
             </property>
             <property name="maximumSize">
              <size>
-              <width>2000</width>
+              <width>1000</width>
               <height>1000</height>
              </size>
             </property>
@@ -378,7 +378,7 @@
                 </size>
                </property>
                <property name="maximum">
-                <number>2000</number>
+                <number>65535</number>
                </property>
                <property name="singleStep">
                 <number>2</number>
@@ -387,7 +387,7 @@
                 <number>5</number>
                </property>
                <property name="value">
-                <number>500</number>
+                <number>20000</number>
                </property>
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
@@ -403,7 +403,7 @@
                 </size>
                </property>
                <property name="maximum">
-                <number>2000</number>
+                <number>65535</number>
                </property>
                <property name="singleStep">
                 <number>1</number>
@@ -2296,8 +2296,8 @@
                 <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'SimSun'; font-size:15pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;AODO&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Microsoft YaHei UI'; font-size:15pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'SimSun';&quot;&gt;AODO&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
               </widget>
              </item>
@@ -2544,7 +2544,7 @@ p, li { white-space: pre-wrap; }
               <widget class="QComboBox" name="CameraTrig">
                <item>
                 <property name="text">
-                 <string>port1/line0</string>
+                 <string>port1/line5</string>
                 </property>
                </item>
                <item>
@@ -2593,12 +2593,12 @@ p, li { white-space: pre-wrap; }
               <widget class="QComboBox" name="VibEnable">
                <item>
                 <property name="text">
-                 <string>port1/line1</string>
+                 <string>port1/line2</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>PFI2</string>
+                 <string>port2/line5</string>
                 </property>
                </item>
                <item>
@@ -2642,7 +2642,7 @@ p, li { white-space: pre-wrap; }
               <widget class="QComboBox" name="LEDEnable">
                <item>
                 <property name="text">
-                 <string>port1/line2:3</string>
+                 <string>port1/line6:7</string>
                 </property>
                </item>
               </widget>
@@ -2679,7 +2679,7 @@ p, li { white-space: pre-wrap; }
               <widget class="QComboBox" name="PumpEnable">
                <item>
                 <property name="text">
-                 <string>port1/line4:5</string>
+                 <string>port1/line4</string>
                 </property>
                </item>
               </widget>

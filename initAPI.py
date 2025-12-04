@@ -38,7 +38,7 @@ cam = device_manager.open_device_by_index(1)
 
 # 设备参数设置
 remote = cam.get_remote_device_feature_control()
-
+remote.feature_save("export_config_file.txt")
 #trigger_soft_ware_feature =  remote.get_register_feature( "TriggerSoftware")
 
 # === 自动曝光与增益控制 ===
@@ -74,10 +74,10 @@ remote.get_enum_feature("GainAuto").set("Off")
 cam.stream_on()
 all_images = []
 
-for i in range(num_images):
-    raw_image = cam.data_stream[0].get_image()
-    img = raw_image.get_numpy_array()
-    all_images.append(img)
+# for i in range(num_images):
+#     raw_image = cam.data_stream[0].get_image()
+#     img = raw_image.get_numpy_array()
+#     all_images.append(img)
 
     # 保存每张图
     # Image.fromarray(img.astype(np.uint16)).save(os.path.join(save_dir, f"{i+1}.tiff"), format="TIFF", compression=None)
