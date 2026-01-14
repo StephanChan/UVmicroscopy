@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'D:\SSOCT_HE\software\StageDialogUI.ui'
+# Form implementation generated from reading ui file 'D:\UVcode\UVmicroscopy\StageDialogUI.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.10
 #
@@ -17,31 +17,17 @@ class Ui_Dialog(object):
         Dialog.resize(640, 480)
         self.gridLayout = QtWidgets.QGridLayout(Dialog)
         self.gridLayout.setObjectName("gridLayout")
-        self.Zpos = QtWidgets.QDoubleSpinBox(Dialog)
-        self.Zpos.setMaximum(150.0)
-        self.Zpos.setObjectName("Zpos")
-        self.gridLayout.addWidget(self.Zpos, 3, 1, 1, 1)
-        self.Ypos = QtWidgets.QDoubleSpinBox(Dialog)
-        self.Ypos.setObjectName("Ypos")
-        self.gridLayout.addWidget(self.Ypos, 2, 1, 1, 1)
-        self.label_3 = QtWidgets.QLabel(Dialog)
-        self.label_3.setObjectName("label_3")
-        self.gridLayout.addWidget(self.label_3, 3, 0, 1, 1)
         self.label_2 = QtWidgets.QLabel(Dialog)
         self.label_2.setObjectName("label_2")
         self.gridLayout.addWidget(self.label_2, 2, 0, 1, 1)
-        self.Xpos = QtWidgets.QDoubleSpinBox(Dialog)
-        self.Xpos.setMaximum(300.0)
-        self.Xpos.setObjectName("Xpos")
-        self.gridLayout.addWidget(self.Xpos, 1, 1, 1, 1)
-        self.label = QtWidgets.QLabel(Dialog)
-        self.label.setObjectName("label")
-        self.gridLayout.addWidget(self.label, 1, 0, 1, 1)
         self.buttonBox = QtWidgets.QDialogButtonBox(Dialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
-        self.gridLayout.addWidget(self.buttonBox, 4, 1, 1, 1)
+        self.gridLayout.addWidget(self.buttonBox, 5, 1, 1, 1)
+        self.label_3 = QtWidgets.QLabel(Dialog)
+        self.label_3.setObjectName("label_3")
+        self.gridLayout.addWidget(self.label_3, 3, 0, 1, 1)
         self.label_4 = QtWidgets.QLabel(Dialog)
         self.label_4.setMaximumSize(QtCore.QSize(16777215, 150))
         font = QtGui.QFont()
@@ -51,6 +37,26 @@ class Ui_Dialog(object):
         self.label_4.setFont(font)
         self.label_4.setObjectName("label_4")
         self.gridLayout.addWidget(self.label_4, 0, 0, 1, 2)
+        self.Zpos = QtWidgets.QDoubleSpinBox(Dialog)
+        self.Zpos.setMaximum(150.0)
+        self.Zpos.setObjectName("Zpos")
+        self.gridLayout.addWidget(self.Zpos, 3, 1, 1, 1)
+        self.label = QtWidgets.QLabel(Dialog)
+        self.label.setObjectName("label")
+        self.gridLayout.addWidget(self.label, 1, 0, 1, 1)
+        self.Xpos = QtWidgets.QDoubleSpinBox(Dialog)
+        self.Xpos.setMaximum(300.0)
+        self.Xpos.setObjectName("Xpos")
+        self.gridLayout.addWidget(self.Xpos, 1, 1, 1, 1)
+        self.Ypos = QtWidgets.QDoubleSpinBox(Dialog)
+        self.Ypos.setObjectName("Ypos")
+        self.gridLayout.addWidget(self.Ypos, 2, 1, 1, 1)
+        self.label_5 = QtWidgets.QLabel(Dialog)
+        self.label_5.setObjectName("label_5")
+        self.gridLayout.addWidget(self.label_5, 4, 0, 1, 1)
+        self.CutHeight = QtWidgets.QDoubleSpinBox(Dialog)
+        self.CutHeight.setObjectName("CutHeight")
+        self.gridLayout.addWidget(self.CutHeight, 4, 1, 1, 1)
 
         self.retranslateUi(Dialog)
         self.buttonBox.accepted.connect(Dialog.accept) # type: ignore
@@ -60,10 +66,11 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.label_3.setText(_translate("Dialog", "Z stage current pos"))
         self.label_2.setText(_translate("Dialog", "Y stage current pos"))
-        self.label.setText(_translate("Dialog", "X stage current pos"))
+        self.label_3.setText(_translate("Dialog", "Z stage current pos"))
         self.label_4.setText(_translate("Dialog", "Is the current Stage position correct?"))
+        self.label.setText(_translate("Dialog", "X stage current pos"))
+        self.label_5.setText(_translate("Dialog", "Cut height"))
 
 
 if __name__ == "__main__":

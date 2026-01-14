@@ -53,7 +53,9 @@ class WeaverThread(QThread):
                     else:
                         self.LoadTileFlag()
                     message = self.Mosaic()
-                        
+                    print(self.tile_flag)
+                    an_action = DnSAction('WriteAgar', data = self.tile_flag, args = [self.total_Y, self.total_X]) # data in Memory[memoryLoc]
+                    self.DnSQueue.put(an_action)
                     self.ui.statusbar.showMessage(message)
                     # self.ui.PrintOut.append(message)
                     self.log.write(message)
@@ -266,7 +268,7 @@ class WeaverThread(QThread):
         self.DOQueue.put(an_action)
         an_action = CAction('Stream_on')
         self.CQueue.put(an_action)
-        print('totalY:',self.total_Y, 'totalX:', self.total_X, self.tile_flag.shape)
+        # print('totalY:',self.total_Y, 'totalX:', self.total_X, self.tile_flag.shape)
         for yy in range(self.total_Y):
             for xx in range(self.total_X):
                 if self.ui.RunButton.isChecked() and self.tile_flag[yy][xx] > 0:
@@ -329,7 +331,7 @@ class WeaverThread(QThread):
         self.surf = self.DnSBackQueue.get()
         plt.figure()
         plt.subplot(2,1,1)
-        plt.imshow(self.surf,vmin=0,vmax=10550)
+        plt.imshow(self.surf,vmin=0,vmax=5550)
         # segment tissue area using threshold
         mask = np.float32(self.surf>self.ui.AgarValue.value())
         plt.subplot(2,1,2)
@@ -383,10 +385,10 @@ class WeaverThread(QThread):
                     self.tile_flag_rearange[ii,jj-1]=1
                 if np.sum(maskij[:,-yylength//4:])>300:
                     self.tile_flag_rearange[ii,jj+1]=1
-        # plt.figure()
+        plt.figure()
         # plt.subplot(1,3,1)
-        # plt.imshow(self.tile_flag_rearange)
-        
+        plt.imshow(self.tile_flag_rearange)
+        plt.show()
         self.tile_flag_rearange = np.flip(self.tile_flag_rearange)
         # plt.subplot(1,3,2)
         # plt.imshow(self.tile_flag_rearange)
@@ -452,7 +454,9 @@ class WeaverThread(QThread):
                     time.sleep(0.5)
             if not self.ui.RunButton.isChecked():
                 return 'user stopped service'
-
+            #Pump
+            an_action = DOAction('PumpOFF')
+            self.DOQueue.put(an_action)
             
             message = self.Mosaic()
             if self.ui.PauseButton.isChecked():
@@ -542,7 +546,9 @@ class WeaverThread(QThread):
             sign = -1
         self.ui.YPosition.setValue(self.ui.SliceLength.value()*sign+self.ui.YPosition.value())
         speed = self.ui.YSpeed.value()
+        print(speed)
         self.ui.YSpeed.setValue(self.ui.SliceSpeed.value())
+        print(self.ui.YSpeed.value())
         an_action = DOAction('Ymove2')
         self.DOQueue.put(an_action)
         self.DOBackQueue.get()

@@ -456,7 +456,8 @@ class DOThread(QThread):
                 
     def Zstack(self):
         Steps = self.ui.Zstack.value()
-        pos = self.ui.ZMstagestepsize.value()*(np.array(range(Steps))/1.0+0.5-Steps/2)+40 # um
+        pos = self.ui.ZMstagestepsize.value()*(np.array(range(Steps))/1.0+0.5-Steps/2)+\
+            self.ui.XStartHeight.value()# um
         # print(pos)
         for istep in range(Steps):
             self.ui.ZMPosition.setValue(pos[istep])
@@ -468,7 +469,7 @@ class DOThread(QThread):
             # time.sleep(0.5)
             self.DOtask.write(0, auto_start = True)
             # wait until last exposure finish
-            time.sleep((self.ui.CurrentExpo.value()+10)/1000.0)
+            time.sleep((self.ui.CurrentExpo.value()+15)/1000.0)
             
             
     def ConfigZstack(self):
@@ -499,6 +500,8 @@ class DOThread(QThread):
             settingtask.wait_until_done(timeout = 0.1)
             settingtask.stop()
             settingtask.close()
+            # print('here')
+            self.Pump_on()
         self.DOBackQueue.put(0)
         
     def stopVibratome(self):
@@ -510,33 +513,37 @@ class DOThread(QThread):
             settingtask.wait_until_done(timeout = 0.1)
             settingtask.stop()
             settingtask.close()
+            #self.Pump_off()
         self.DOBackQueue.put(0)
 
     
+    #Pump line: P1.4-water out ; P1.3-water in
+
     def Pump_on(self):
+        # print('herhe')
         if not (SIM or self.SIM):
             with daq.Task() as Pump_task:
                 Pump_task.do_channels.add_do_chan(self.PumpEnable, line_grouping=LineGrouping.CHAN_PER_LINE)
-                Pump_task.write([1, 1])
-        self.DOBackQueue.put('Pump Turned On')
+                Pump_task.write([1, 1], auto_start = True)
+        # self.DOBackQueue.put('Pump Turned On')
            
         
     def PumpA_on(self):
         if not (SIM or self.SIM):
             with daq.Task() as Pump_task:
                 Pump_task.do_channels.add_do_chan(self.PumpEnable, line_grouping=LineGrouping.CHAN_PER_LINE)
-                Pump_task.write([1, 0])
-        self.DOBackQueue.put('Pump Turned On')
+                Pump_task.write([1, 0], auto_start = True)
+        # self.DOBackQueue.put('Pump Turned On')
     
     def PumpB_on(self):
         if not (SIM or self.SIM):
             with daq.Task() as Pump_task:
                 Pump_task.do_channels.add_do_chan(self.PumpEnable, line_grouping=LineGrouping.CHAN_PER_LINE)
-                Pump_task.write([0, 1])
-        self.DOBackQueue.put('Pump Turned On')
+                Pump_task.write([0, 1], auto_start = True)
+        # self.DOBackQueue.put('Pump Turned On')
     
     def Pump_off(self):
         if not (SIM or self.SIM):
             with daq.Task() as Pump_task:
                 Pump_task.do_channels.add_do_chan(self.PumpEnable, line_grouping=LineGrouping.CHAN_PER_LINE)
-                Pump_task.write([0, 0])
+                Pump_task.write([0, 0], auto_start = True)

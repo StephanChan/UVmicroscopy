@@ -46,8 +46,6 @@ class DnSThread(QThread):
                     self.Display_Snap(self.item.data)
                 elif self.item.action == 'Display_Mosaic':
                     self.Display_Mosaic(self.item.data, self.item.args)
-                elif self.item.action == 'Clear':
-                    self.SampleMosaic= []
                 elif self.item.action == 'UpdateContrastImage':
                     self.Update_contrast_Image()
                 elif self.item.action == 'UpdateContrastMosaic':
@@ -109,7 +107,7 @@ class DnSThread(QThread):
             self.image = data[0]
         pixmap = RGBImagePlot(matrix1 = np.float32(self.image[::scale, ::scale]), m=self.ui.Imagemin.value(), M=self.ui.Imagemax.value())
         # clear content on the waveformLabel
-        self.ui.Image.clear()
+        # self.ui.Image.clear()
         # update iamge on the waveformLabel
         self.ui.Image.setPixmap(pixmap)
         
@@ -132,7 +130,7 @@ class DnSThread(QThread):
         self.SampleMosaic = np.zeros([Ytiles*(Ypixels//scale), Xtiles*(Xpixels//scale)], dtype=np.uint16)
 
         pixmap = RGBImagePlot(matrix1=self.SampleMosaic, m=self.ui.Mosaicmin.value(), M=self.ui.Mosaicmax.value())
-        self.ui.Mosaic.clear()
+        # self.ui.Mosaic.clear()
         self.ui.Mosaic.setPixmap(pixmap)
 
     
@@ -154,11 +152,13 @@ class DnSThread(QThread):
             
         pixmap = RGBImagePlot(matrix1 = np.float32(self.image[::scale, ::scale]), m=self.ui.Imagemin.value(), M=self.ui.Imagemax.value())
         # clear content on the waveformLabel
-        self.ui.Image.clear()
+        # self.ui.Image.clear()
         # update iamge on the waveformLabel
         self.ui.Image.setPixmap(pixmap)
+        
         tileMean = np.mean(self.image)
         self.ui.tileMean.setValue(tileMean)
+        
         Xtiles = args[1][0]
         Ytiles = args[1][1]
         Y = Ytiles - args[0][1] - 1
@@ -168,7 +168,7 @@ class DnSThread(QThread):
                   Xpixels//scale*X:Xpixels//scale*(X+1)] = self.image[::scale, ::scale]
     
         pixmap = RGBImagePlot(matrix1=self.SampleMosaic, m=self.ui.Mosaicmin.value(), M=self.ui.Mosaicmax.value())
-        self.ui.Mosaic.clear()
+        # self.ui.Mosaic.clear()
         self.ui.Mosaic.setPixmap(pixmap)
         if self.ui.Save.isChecked():
             filenametiff, filenamebin = self.MosaicFilename([Ypixels,Xpixels,Zpixels])
@@ -188,12 +188,10 @@ class DnSThread(QThread):
 
     def Update_contrast_Image(self):
         if self.ui.Imagemin.value() != self.Imagemin or self.ui.Imagemax.value() != self.Imagemax:
-            
             try:
-
                 pixmap = RGBImagePlot(matrix1 = np.float32(self.image), m=self.ui.Imagemin.value(), M=self.ui.Imagemax.value())
                 # clear content on the waveformLabel
-                self.ui.Image.clear()
+                # self.ui.Image.clear()
                 # update iamge on the waveformLabel
                 self.ui.Image.setPixmap(pixmap)
             except:

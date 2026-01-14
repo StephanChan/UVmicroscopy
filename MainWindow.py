@@ -51,8 +51,11 @@ class MainWindow(QMainWindow):
 
       
 
-    def LoadSettings(self):
-        settings = qc.QSettings("config.ini", qc.QSettings.IniFormat)
+    def LoadSettings(self, filename = ''):
+        if any(filename):
+            settings = qc.QSettings(filename, qc.QSettings.IniFormat)
+        else:
+            settings = qc.QSettings("config.ini", qc.QSettings.IniFormat)
         for ii in dir(self.ui):
             if ii == 'ACQMode':
                 pass

@@ -1,1 +1,1 @@
-pyuic5 -x D:\UVmicroscopy\software\UVmicroscopy-master\ui2.ui -o D:\UVmicroscopy\software\UVmicroscopy-master\my_ui.py
+pyuic5 -x D:\UVcode\UVmicroscopy\ui2.ui -o D:\UVcode\UVmicroscopy\my_ui.py

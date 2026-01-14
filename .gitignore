@@ -1,0 +1,12 @@
+
+.vscode/
+*.pyc
+__pycache__/
+
+log_files/
+
+config.ini
+
+scatter.jpg
+
+README.txt

@@ -76,6 +76,7 @@ class GUI(MainWindow):
         super().__init__()
         self.log = LOG(self.ui)
         self.ui.RunButton.clicked.connect(self.run_task)
+        self.ui.PauseButton.clicked.connect(self.PauseFunction)
         
         self.ui.SnapButton.clicked.connect(self.Snap)
         self.ui.LiveButton.clicked.connect(self.Live)
@@ -136,8 +137,9 @@ class GUI(MainWindow):
             if self.ui.RunButton.isChecked():
                 self.ui.RunButton.setText('Stop')
                 # for surfScan and SurfSlice, popup a dialog to double check stage position
-                if self.ui.ACQMode.currentText() in ['Mosaic','Mosaic+Cut','RptCut']:
-                    dlg = StageDialog( self.ui.XPosition.value(), self.ui.YPosition.value(), self.ui.ZPosition.value())
+                if self.ui.ACQMode.currentText() in ['Mosaic','Mosaic+Cut','RptCut','SingleCut']:
+                    dlg = StageDialog( self.ui.XPosition.value(), self.ui.YPosition.value(), self.ui.ZPosition.value(),\
+                             self.ui.SliceZStart.value()         )
                     dlg.setWindowTitle("double-check stage position")
                     if dlg.exec():
                         an_action = WeaverAction(self.ui.ACQMode.currentText())
@@ -154,7 +156,11 @@ class GUI(MainWindow):
                     an_action = WeaverAction(self.ui.ACQMode.currentText())
                     WeaverQueue.put(an_action)
 
-
+    def PauseFunction(self):
+        if self.ui.PauseButton.isChecked():
+            self.ui.PauseButton.setText('Resume')
+        else:
+            self.ui.PauseButton.setText('Pause')
         
     def Snap(self):
             # for surfScan and SurfSlice, popup a dialog to double check stage position
@@ -190,8 +196,6 @@ class GUI(MainWindow):
     def change_slice_number(self):
         an_action = DnSAction('change_slice_number')
         DnSQueue.put(an_action)
-
-
         
     def SetExposure(self):
         an_action = CAction('SetExposure')
@@ -294,7 +298,7 @@ class GUI(MainWindow):
         if self.ui.PumpA.isChecked():
             an_action = DOAction('PumpAON')
             DOQueue.put(an_action)
-            DOBackQueue.get()
+            # DOBackQueue.get()
         else:
             an_action = DOAction('PumpOFF')
             DOQueue.put(an_action)
@@ -304,7 +308,7 @@ class GUI(MainWindow):
         if self.ui.PumpB.isChecked():
             an_action = DOAction('PumpBON')
             DOQueue.put(an_action)
-            DOBackQueue.get()
+            # DOBackQueue.get()
         else:
             an_action = DOAction('PumpOFF')
             DOQueue.put(an_action)

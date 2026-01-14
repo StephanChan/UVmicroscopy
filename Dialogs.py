@@ -25,7 +25,7 @@ from StageDialogUI import Ui_Dialog as StageDialogUI
         
         
 class StageDialog(QDialog):
-    def __init__(self, Xpos = 0, Ypos = 0, Zpos = 0):
+    def __init__(self, Xpos = 0, Ypos = 0, Zpos = 0, cutHeight = 0):
         super().__init__()
 
         self.ui = StageDialogUI()
@@ -33,6 +33,7 @@ class StageDialog(QDialog):
         self.ui.Xpos.setValue(Xpos)
         self.ui.Ypos.setValue(Ypos)
         self.ui.Zpos.setValue(Zpos)
+        self.ui.CutHeight.setValue(cutHeight)
         # self.confirm = False
         
         # self.ui.buttonBox.accepted.connect(self.accept)

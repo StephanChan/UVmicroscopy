@@ -52,7 +52,7 @@ class Camera(QThread):
 
     def run(self):
         if not SIM:
-            print('init camera')
+            print('initializing camera...')
             self.initCamera()
         self.QueueOut()
 
@@ -106,15 +106,13 @@ class Camera(QThread):
             self.hcam_fr.get_enum_feature("TriggerMode").set("On")
             self.CBackQueue.put(0)
             for i in range(self.ui.Zstack.value()):
-                buf = self.hcam.data_stream[0].get_image(timeout=10000)
-                img = buf.get_numpy_array()
-                # [w,h] = img.shape
-                img = np.rot90(img,1)
-                
-                all_images.append(img)
-            # self.image = np.clip(np.rint(np.mean(all_images, axis = 0)), 0, 65535).astype(np.uint16)
-                
-            # self.img_16bit = Image.fromarray(self.image.astype(np.uint16), mode='I;16')
+                try:
+                    buf = self.hcam.data_stream[0].get_image(timeout=10000)
+                    img = buf.get_numpy_array()
+                    img = np.rot90(img,1)
+                    all_images.append(img)
+                except:
+                    print('timeout error! Camera did not receive trigger')
                 
         else:
             all_images = np.uint16(np.random.rand(self.ui.Zstack.value(), self.ui.Width.value(), self.ui.Height.value())*4096)
@@ -128,14 +126,13 @@ class Camera(QThread):
         while self.ui.LiveButton.isChecked():
             if self.hcam is not None:
                 all_images = []
-                buf = self.hcam.data_stream[0].get_image(timeout=10000)
-                img = buf.get_numpy_array()
-                # [w,h] = img.shape
-                img = np.rot90(img,1)
-                all_images.append(img)
-                # self.image = np.clip(np.rint(np.mean(all_images, axis = 0)), 0, 65535).astype(np.uint16)
-                    
-                # self.img_16bit = Image.fromarray(self.image.astype(np.uint16), mode='I;16')
+                try:
+                    buf = self.hcam.data_stream[0].get_image(timeout=10000)
+                    img = buf.get_numpy_array()
+                    img = np.rot90(img,1)
+                    all_images.append(img)
+                except:
+                    print('timeout error! Camera did not receive trigger')
             else:
                 all_images = np.uint16(np.random.rand(self.ui.Zstack.value(), self.ui.Width.value(), self.ui.Height.value())*4096)
             # print(np.array(all_images).shape)
@@ -164,17 +161,18 @@ class Camera(QThread):
                     self.hcam_fr.get_int_feature("Height").set(self.ui.Height.value())
                     self.hcam_fr.get_int_feature("OffsetX").set(self.ui.Offsetx.value())
                     self.hcam_fr.get_int_feature("OffsetY").set(self.ui.Offsety.value())
-                    # self.hcam_fr.get_int_feature("Offsety").set(self.ui.Offsety.value())
-                    # self.hcam_fr.get_int_feature("Offsety").set(self.ui.Offsety.value())
-                    # todo: trigger config
-                    self.hcam_fr.feature_save("export_config_file.txt")
-                    
-                    
-                    
+                    self.ui.CurrentExpo.setValue(self.GetExposure())
+                    self.ui.CurrentGain.setValue(self.GetGain())
+                    # self.hcam_fr.get_int_feature("ExposureTime").set(int(self.ui.Exposure.value()*1000.0))
+                    # self.hcam_fr.get_int_feature("Gain").set(self.ui.CurrentGain.value())
+
+                    # self.hcam_fr.feature_save("export_config_file.txt")
+
                     self.hcam_fr.get_enum_feature("TriggerSource").set("Line0")
                     
                     self.hcam_s = self.hcam.get_stream(1).get_feature_control()  # 返回流属性对象
                     self.hcam_s.get_enum_feature("StreamBufferHandlingMode").set("NewestOnly")
+                    print('camera init success')
                 except Exception as ex:
                     # 打开失败，打印错误
                     print(ex)
@@ -195,12 +193,12 @@ class Camera(QThread):
     def SetExposure(self):
         if self.hcam is not None:
             self.hcam_fr.get_float_feature("ExposureTime").set(self.ui.Exposure.value()*1000.0)
-            self.ui.CurrentExpo.setValue(self.hcam_fr.get_float_feature("ExposureTime").get()/1000.0)
+            self.ui.CurrentExpo.setValue(self.GetExposure())
         
     # 获取曝光时间
     def GetExposure(self):
         if self.hcam is not None:
-            return self.hcam_fr.get_float_feature("ExposureTime").get()/1000.0
+            return np.uint16(self.hcam_fr.get_float_feature("ExposureTime").get()/1000.0)
 
     # 控制自动曝光开关
     def AutoExposure(self):
@@ -214,12 +212,12 @@ class Camera(QThread):
     def SetGain(self):
         if self.hcam is not None:
             self.hcam_fr.get_float_feature("Gain").set(self.ui.Gain.value()*1.0)
-            self.ui.CurrentGain.setValue(self.hcam_fr.get_float_feature("Gain").get()/1.0)
+            self.ui.CurrentGain.setValue(self.GetGain())
         
     # 获取曝光时间
     def GetGain(self):
         if self.hcam is not None:
-            return self.hcam_fr.get_float_feature("Gain").get()/1.0
+            return np.uint8(self.hcam_fr.get_float_feature("Gain").get())
 
     # 控制自动曝光开关
     def AutoGain(self):
@@ -238,10 +236,10 @@ class Camera(QThread):
             self.hcam = None
 
     
-    def downsample_stack_2x2_zyx(stack):
-        Z, Y, X = stack.shape
-        Yeven = Y // 2 * 2
-        Xeven = X // 2 * 2
-        stack = stack[:, :Yeven, :Xeven]  # (Z, Yeven, Xeven)
-        stack_ds = stack.reshape(Z, Yeven//2, 2, Xeven//2, 2).mean(axis=(2, 4))
-        return stack_ds.astype(np.uint16)
+    # def downsample_stack_2x2_zyx(stack):
+    #     Z, Y, X = stack.shape
+    #     Yeven = Y // 2 * 2
+    #     Xeven = X // 2 * 2
+    #     stack = stack[:, :Yeven, :Xeven]  # (Z, Yeven, Xeven)
+    #     stack_ds = stack.reshape(Z, Yeven//2, 2, Xeven//2, 2).mean(axis=(2, 4))
+    #     return stack_ds.astype(np.uint16)
